@@ -21,7 +21,7 @@ def load_bed(bedfile):
     df = pd.read_csv(bedfile, sep='\s+', header=None,
                      names=['chrom', 'start', 'end', 'value'],
                      dtype={'chrom': str,
-                           'start': int, 'end': int, 'value': int})
+                           'start': int, 'end': int, 'value': float})
     return df
 
 
@@ -77,7 +77,7 @@ def main(bedfile, outfile, k, hardcutoff, zerobaed):
         print('1 based')
     # 去异常值
     if not hardcutoff:
-        cutoff, _ = cal_outlier(df['value'].values, x=k)
+        cutoff, _ = cal_outlier(df['end'].values - df['start'].values, x=k)
         print(f'length filter cutoff: {cutoff}')
         df = df.loc[(df['end'].values-df['start'].values+1) <= cutoff, :]
         print(f'{df.shape} remained')
@@ -88,8 +88,10 @@ def main(bedfile, outfile, k, hardcutoff, zerobaed):
     for chrom in df['chrom'].unique():
         beds = df.loc[df['chrom']==chrom, ['start', 'end', 'value']].values
         length = beds[:, 1].max()
-        values = np.zeros(length, dtype=np.int64)
+        values = np.zeros(int(length))
         for start, end, value in beds:
+            start = int(start)
+            end = int(end)
             old = values[start-1: end]
             new = np.full(end-start+1, value)
             values[start-1: end] = np.max([old, new], axis=0)
