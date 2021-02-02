@@ -56,7 +56,7 @@ def main(vcffile: str = typer.Argument(..., help="包含父母本DNA和RNA的总
          outfile: str = typer.Argument(..., help="输出文件名(非压缩格式，.tsv后缀)")):
     cols = ['CHROM', 'POS', 'REF', 'ALTs', 'CID_rna', 'REF_count', 'ALTs_count', 'DP', 'MajorAllele_index', 'MajorAllele_parent', 'Major_Proportion', 'AllelicBias', 'BinomialTest', 'FisherExact', 'F_GT', 'M_GT', 'DNA_GT', 'RNA_GT', 'Mendelian_DNA', 'Mendelian_RNA']
     with open(outfile, 'w') as f:
-        f.write('\t'.join(cols))
+        f.write('\t'.join(cols) + '\n')
     with open(sampleinfo) as f:
         for line in f:
             if line[0] == '#':
