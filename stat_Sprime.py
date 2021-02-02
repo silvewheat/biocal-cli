@@ -40,17 +40,14 @@ def sites2regions(df):
     mdf = pd.DataFrame(mdf, columns=['chrom', 'start', 'end', 'length', 'segment_index', 'score', 'n_snps'])
     return mdf
 
-@click.group()
-def main():
-    """处理sprime的输出结果"""
 
 
-@main.command('merge')
+@click.command()
 @click.option('--scorefile', help='sprime的后缀为.score的输出文件')
 @click.option('--outdir', help='输出文件目录（空目录或未创建的目录）')
-def merge(scorefile, outdir):
+def main(scorefile, outdir):
     """合并.score为区域，并进行基本统计"""
-    sdf = pd.read_csv('chrAuto.score', sep='\t')
+    sdf = pd.read_csv(scorefile, sep='\t')
     
     # 合并位点为区域
     mdf = sites2regions(sdf)
@@ -67,19 +64,6 @@ def merge(scorefile, outdir):
     g = sns.pairplot(sdf[['length', 'n_snps', 'score']], diag_kind="kde")
     g.map_lower(sns.kdeplot, levels=4, color=".2")
     g.savefig(outfile, dpi=300)
-
-
-
-@main.command('plotregions')
-@click.option('--scorefile', help='sprime的后缀为.score的输出文件')
-@click.option('--regionfile', help='merge产生的sprime_region.tsv.gz')
-@click.option('--outdir', help='输出存放图片的目录（空目录或未创建的目录）')
-def merge(scorefile, outdir):
-    """合并.score为区域，并进行基本统计"""
-    sdf = pd.read_csv('chrAuto.score', sep='\t')
- 
-
-
 
 
 
