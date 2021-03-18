@@ -24,8 +24,8 @@ from statsmodels.stats.multitest import fdrcorrection
 @click.option('--outfile', help='输出文件名')
 def main(infile, val_col, sep, tail, outfile):
     """
-    P values were estimated based on Z-transformed ƒ(d) values using the standard normal distribution,
-    and were further cor- rected by multiple testing using the Benjamini–Hochberg false discovery rate (FDR) method
+    P values were estimated based on Z-transformed values using the standard normal distribution,
+    and were further corrected by multiple testing using the Benjamini–Hochberg false discovery rate (FDR) method
     """
     if not sep:
         df = pd.read_csv(infile, sep='\t', dtype={val_col: float})
@@ -39,9 +39,9 @@ def main(infile, val_col, sep, tail, outfile):
     print(f'mean: {mean}, std: {std}')
     df['Z-score'] = zscore(df[val_col].values)
     if tail == 'right':
-        df['Pvalue'] = df[val_col].apply(lambda x: norm.sf(x)) # Survival function (also defined as 1 - cdf, but sf is sometimes more accurate).
+        df['Pvalue'] = df['Z-score'].apply(lambda x: norm.sf(x)) # Survival function (also defined as 1 - cdf, but sf is sometimes more accurate).
     elif tail == 'left':
-        df['Pvalue'] = df[val_col].apply(lambda x: norm.cdf(x)) # Cumulative distribution function.
+        df['Pvalue'] = df['Z-score'].apply(lambda x: norm.cdf(x)) # Cumulative distribution function.
 #    df['FDR'] = multicomp(df['Pvalue'].values, method='fdr_bh')[1]
     df['FDR'] = fdrcorrection(df['Pvalue'].values, alpha=0.05, method='indep', is_sorted=False)[1]
     df.to_csv(outfile, sep='\t', index=False)
