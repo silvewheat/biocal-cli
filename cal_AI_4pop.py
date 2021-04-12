@@ -139,6 +139,8 @@ def main(vcffile, popa, popb, popc, popd, binwidth, stepsize, outprefix):
         for group_name, gdf in df.groupby(by=['chrom', 'bin_index']):
             chrom, bin_index = group_name
             start = bin_index * binwidth + offset + 1
+            if start < 0: # 开头几个窗口长度不足的就直接跳过
+                continue
             end = start + binwidth - 1
             n_snp = gdf.shape[0]
             print(chrom, start, end, n_snp)
