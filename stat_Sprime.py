@@ -30,7 +30,7 @@ def sites2regions(df):
     mdf = []
     for i in range(df['SEGMENT'].max()+1):
         tdf = df.loc[df['SEGMENT']==i, :]
-        chrom = tdf['CHROM'].min()
+        chrom = tdf['CHROM'].values[0]
         start = tdf['POS'].min()
         end = tdf['POS'].max()
         length = end - start + 1
@@ -47,7 +47,7 @@ def sites2regions(df):
 @click.option('--outdir', help='输出文件目录（空目录或未创建的目录）')
 def main(scorefile, outdir):
     """合并.score为区域，并进行基本统计"""
-    sdf = pd.read_csv(scorefile, sep='\t')
+    sdf = pd.read_csv(scorefile, sep='\t', dtype={'chrom': 'category'})
     
     # 合并位点为区域
     mdf = sites2regions(sdf)
