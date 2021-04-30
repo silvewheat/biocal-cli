@@ -71,8 +71,9 @@ def cal_alt1_freq(gt_array):
 @click.option('--popb', help='群体B(被渗入群体)的ID列表，一行一个')
 @click.option('--popc', help='群体C(渗入来源群体)的ID列表，一行一个')
 @click.option('--binwidth', type=int, default=50000, help='滑动窗口大小')
+@click.option('--stepsize', type=int, default=10000, help='滑动窗口步长')
 @click.option('--outprefix', help='输出文件前缀')
-def main(vcffile, popa, popb, popc, binwidth, outprefix):
+def main(vcffile, popa, popb, popc, binwidth, stepsize, outprefix):
     """
     U_A,B,C(w,x,y)
     A是非渗入群体，B是被渗入群体，C是渗入来源群体
@@ -115,30 +116,27 @@ def main(vcffile, popa, popb, popc, binwidth, outprefix):
     df = df.iloc[selection_popC_1percent, :]
     print(f'{df.shape[0]} sites remained after frequency filtering.')
     
-    # 计算相关统计量
-    selection_popB_10percent = df['popB'].values >= 0.1
-    selection_popB_20percent = df['popB'].values >= 0.2
-    selection_popB_50percent = df['popB'].values >= 0.5
-    selection_popB_80percent = df['popB'].values >= 0.8
-    
     # 滑动窗口计算统计量
-    df['bin_index'] = df['pos'] // binwidth
     odf = []
-    for group_name, gdf in df.groupby(by=['chrom', 'bin_index']):
-        chrom, bin_index = group_name
-        start = bin_index * binwidth
-        end = start + binwidth
-        n_snp = gdf.shape[0]
-        print(chrom, start, end, n_snp)
-#        Q_1_100_q90, Q_1_100_q95, Q_1_100_q100 = np.quantile(gdf['popB'].values, [0.9, 0.95, 1]) # A和B群体的频率已经提前过滤了 New in version 1.15.0.
-        Q_1_100_q90, Q_1_100_q95, Q_1_100_q100 = np.percentile(gdf['popB'].values, [90, 95, 100])
-        U_1_10_100 = np.sum(gdf['popB'].values >= 0.1)
-        U_1_20_100 = np.sum(gdf['popB'].values >= 0.2)
-        U_1_50_100 = np.sum(gdf['popB'].values >= 0.5)
-        U_1_80_100 = np.sum(gdf['popB'].values >= 0.8)
-        odf.append([chrom, start, end, n_snp, Q_1_100_q90, Q_1_100_q95, Q_1_100_q100, U_1_10_100, U_1_20_100, U_1_50_100, U_1_80_100])
+    for offset in range(0, binwidth, stepsize):
+        df['bin_index'] = ((df['pos'].values - 1) - offset) // binwidth
+        for group_name, gdf in df.groupby(by=['chrom', 'bin_index']):
+            chrom, bin_index = group_name
+            start = bin_index * binwidth + offset + 1
+            if start < 0: # 开头几个窗口长度不足的就直接跳过
+                continue
+            end = start + binwidth - 1
+            n_snp = gdf.shape[0]
+            print(chrom, start, end, n_snp)
+#            Q_1_100_q90, Q_1_100_q95, Q_1_100_q100 = np.quantile(gdf['popB'].values, [0.9, 0.95, 1]) # A和B群体的频率已经提前过滤了 New in version 1.15.0.
+            Q_1_100_q90, Q_1_100_q95, Q_1_100_q100 = np.percentile(gdf['popB'].values, [90, 95, 100])
+            U_1_10_100 = np.sum(gdf['popB'].values >= 0.1)
+            U_1_20_100 = np.sum(gdf['popB'].values >= 0.2)
+            U_1_50_100 = np.sum(gdf['popB'].values >= 0.5)
+            U_1_80_100 = np.sum(gdf['popB'].values >= 0.8)
+            odf.append([chrom, start, end, n_snp, Q_1_100_q90, Q_1_100_q95, Q_1_100_q100, U_1_10_100, U_1_20_100, U_1_50_100, U_1_80_100])
 
-    odf = pd.DataFrame(odf, columns=['chrom', 'start', 'end', 'n_snp', 'Q90', 'Q95', 'Q100', 'U10', 'U20', 'U50', 'U80'])
+    odf = pd.DataFrame(odf, columns=['chrom', 'start', 'end', 'n_snp', 'Q90', 'Q95', 'Q100', 'U10', 'U20', 'U50', 'U80']).sort_values(by=['chrom', 'start'])
     odf.to_csv(f'{outprefix}_stat.tsv.gz', index=False, compression='gzip', sep='\t', float_format='%.3f')
 
 if __name__ == '__main__':
