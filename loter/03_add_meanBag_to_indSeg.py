@@ -45,8 +45,8 @@ def main(indseg: str = typer.Argument(..., help="合并后的每个hap的区间�
          bagmax: int = typer.Option(160, help='bagging的最大值，不懂的话看文章')):
     """
     第一步的out.bag.tsv.gz需要进一步用bgzip压缩并建索引
-    zcat out.anc.tsv.gz | bgzip -c > out.anc.tsv.bgz
-    tabix -S 1 -s 1 -b 2 -e 2 -f out.anc.tsv.bgz
+    zcat out.bag.tsv.gz | bgzip -c > out.bag.tsv.bgz
+    tabix -S 1 -s 1 -b 2 -e 2 -f out.bag.tsv.bgz
     """
     rdf = load_indseg(indseg, haps)
     tbxheader, tbx_bag = open_bag(bagfile)
