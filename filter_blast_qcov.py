@@ -42,12 +42,14 @@ def main(blastout, outprefix):
                     max_qcov = qcovs.max()
                     lens = []
                     idents = []
-                    for record, ismax in zip(records, qcovs==max_qcov):
+                    for record, ismax in zip(records, qcovs == max_qcov):
                         if ismax:
                             f2.write(record)
                             tline = record.split()
-                            lens.append(int(tline[header.index('alignment length')]))
-                            idents.append(float(tline[header.index('% identity')]))
+                            lens.append(
+                                int(tline[header.index('alignment length')]))
+                            idents.append(
+                                float(tline[header.index('% identity')]))
                     ident = np.average(idents, weights=lens)
                     f3.write(f'{query}\t{ident}\t{max_qcov}\n')
                     records = []
@@ -56,4 +58,3 @@ def main(blastout, outprefix):
 
 if __name__ == '__main__':
     main()
-
